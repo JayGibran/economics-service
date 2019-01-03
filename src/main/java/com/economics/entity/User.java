@@ -1,4 +1,4 @@
-package com.economics.model;
+package com.economics.entity;
 
 import lombok.Getter;
 import lombok.Setter;

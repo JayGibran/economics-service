@@ -1,4 +1,4 @@
-package com.economics.exceptions;
+package com.economics.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

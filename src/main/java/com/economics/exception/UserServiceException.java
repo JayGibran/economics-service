@@ -1,4 +1,4 @@
-package com.economics.exceptions;
+package com.economics.exception;
 
 public class UserServiceException extends RuntimeException {
 

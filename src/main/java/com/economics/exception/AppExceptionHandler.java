@@ -1,4 +1,4 @@
-package com.economics.exceptions;
+package com.economics.exception;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

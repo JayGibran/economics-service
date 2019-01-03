@@ -2,14 +2,17 @@ package com.economics.controller;
 
 
 import com.economics.constant.ErrorMessage;
-import com.economics.exceptions.UserServiceException;
-import com.economics.dto.model.request.UserDetailsRequestModel;
-import com.economics.dto.model.response.UserResponse;
-import com.economics.service.UserService;
 import com.economics.dto.UserDTO;
+import com.economics.exception.UserServiceException;
+import com.economics.model.UserRequestModel;
+import com.economics.model.UserResponseModel;
+import com.economics.service.UserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -19,37 +22,57 @@ public class UserController {
     private UserService userService;
 
     @GetMapping(path="/{userId}")
-    public UserResponse getUser(@PathVariable String userId){
-        UserResponse userResponse = new UserResponse();
-        UserDTO userDTO = userService.getUserByUserId(userId);
-        BeanUtils.copyProperties(userDTO, userResponse);
-        return userResponse;
+    public UserDTO getUser(@PathVariable String userId){
+        return userService.getUserByUserId(userId);
     }
 
     @PostMapping
-    public UserResponse createUser(@RequestBody UserDetailsRequestModel userDetails){
-        UserResponse returnValue = new UserResponse();
+    public UserResponseModel createUser(@RequestBody UserRequestModel userRequestModel){
+        UserResponseModel userResponseModel = new UserResponseModel();
         UserDTO userDTO = new UserDTO();
 
-        if (userDetails.getFirstName() == null) throw new UserServiceException(ErrorMessage.MISSING_REQUIRED_FIELD.getErrorMessage());
+        if (userRequestModel.getFirstName() == null) throw new UserServiceException(ErrorMessage.MISSING_REQUIRED_FIELD.getErrorMessage());
 
-        BeanUtils.copyProperties(userDetails, userDTO);
+        BeanUtils.copyProperties(userRequestModel, userDTO);
 
-        UserDTO createdUser = userService.createUser(userDTO);
-        BeanUtils.copyProperties(createdUser, returnValue);
+        BeanUtils.copyProperties(userService.createUser(userDTO), userResponseModel);
 
-        return returnValue;
+        return userResponseModel;
+
     }
 
+    @PutMapping(path="/{userId}")
+    public UserResponseModel updateUser(@PathVariable String userId, @RequestBody UserRequestModel userRequestModel){
+        UserResponseModel userResponseModel = new UserResponseModel();
+        UserDTO userDTO = new UserDTO();
 
-    @PutMapping
-    public String updateUser(){
-        return "update user was called";
+        BeanUtils.copyProperties(userRequestModel, userDTO);
+
+        BeanUtils.copyProperties(userService.updateUser(userId, userDTO), userResponseModel);
+
+        return userResponseModel;
     }
 
-    @DeleteMapping
-    public String deleteUser(){
-        return "delete user was called";
+    @DeleteMapping(path="/{userId}")
+    public void deleteUser(@PathVariable String userId){
+        userService.deleteUser(userId);
+    }
+
+    @GetMapping
+    public List<UserResponseModel> getUsers(@RequestParam(value = "page", defaultValue = "0") int page,
+                                  @RequestParam(value = "limit", defaultValue = "25") int limit){
+
+        List<UserResponseModel> returnListUser = new ArrayList<UserResponseModel>();
+
+        List<UserDTO> users =  userService.getUsers(page, limit);
+
+        users.forEach(user ->{
+            UserResponseModel userResponseModel = new UserResponseModel();
+            BeanUtils.copyProperties(user, userResponseModel);
+            returnListUser.add(userResponseModel);
+        });
+
+        return returnListUser;
     }
 
 }

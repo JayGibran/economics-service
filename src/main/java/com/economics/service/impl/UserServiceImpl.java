@@ -1,18 +1,24 @@
 package com.economics.service.impl;
 
-import com.economics.model.User;
+import com.economics.constant.ErrorMessage;
+import com.economics.dto.UserDTO;
+import com.economics.entity.User;
+import com.economics.exception.UserServiceException;
+import com.economics.helper.Utils;
 import com.economics.repository.UserRepository;
 import com.economics.service.UserService;
-import com.economics.helper.Utils;
-import com.economics.dto.UserDTO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -70,4 +76,49 @@ public class UserServiceImpl implements UserService {
         BeanUtils.copyProperties(user, userDTO);
         return userDTO;
     }
+
+    @Override
+    public UserDTO updateUser(String userId, UserDTO userDTO) {
+        UserDTO returnValue = new UserDTO();
+        User user = repository.findByUserId(userId);
+        if(user == null) throw new UserServiceException(ErrorMessage.NO_RECORD_FOUND.getErrorMessage());
+
+        user.setFirstName(userDTO.getFirstName());
+        user.setLastName(userDTO.getLastName());
+        User userUpdated = repository.save(user);
+
+        BeanUtils.copyProperties(userUpdated, returnValue);
+
+        return returnValue;
+    }
+
+    @Override
+    public void deleteUser(String userId) {
+        User user = repository.findByUserId(userId);
+        if(user == null) throw new UserServiceException(ErrorMessage.NO_RECORD_FOUND.getErrorMessage());
+
+        repository.delete(user);
+    }
+
+    @Override
+    public List<UserDTO> getUsers(int page, int limit) {
+        List<UserDTO> listUser = new ArrayList<>();
+        Pageable pageableRequest = PageRequest.of(page, limit);
+
+        if(page > 0) page = page -1;
+
+        Page<User> usersPage = repository.findAll(pageableRequest);
+        List<User> users = usersPage.getContent();
+
+        users.forEach(user -> {
+            UserDTO userDTO = new UserDTO();
+
+            BeanUtils.copyProperties(user, userDTO);
+            listUser.add(userDTO);
+        });
+
+        return listUser;
+    }
+
+
 }
